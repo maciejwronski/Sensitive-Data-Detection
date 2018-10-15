@@ -6,10 +6,12 @@
 class Menu {
 private:
 	short _selectFileToProcess;
+	short _selectTypeOfObject;
 	void SetMenu(short select);
 
 public:
 	short GetMenu() const;
-	void GetPathFromUser(std::string& filePath);
+	short GetTypeOfObjectToDetect();
+	std::string GetPathToFileFromUser();
 	Menu(const short choice) : _selectFileToProcess(choice) {};
 };

@@ -59,6 +59,8 @@ artifacts/
 *.sbr
 *.tlb
 *.tli
+*.jpg
+*.png
 *.tlh
 *.tmp
 *.tmp_proj
