@@ -24,8 +24,7 @@ void ObjectDetection::CreateWindow() {
 void ObjectDetection::DetectObjects() {
 	cv::Mat matGray;
 	cv::cvtColor(matFile, matGray, cv::COLOR_BGR2GRAY);
-	_cascade.detectMultiScale(matGray, objbuffer, 1.1, 2, 0, cv::Size(maxWidth, maxHeight));
-	cv::imshow(_windowName, matFile);                       
+	_cascade.detectMultiScale(matGray, objbuffer, 1.1, 2, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));                     
 }
 void ObjectDetection::ShowObjects()
 {
@@ -33,9 +32,10 @@ void ObjectDetection::ShowObjects()
 		return;
 	CreateWindow();
 	DetectObjects();
-
+	std::cout << Messages::FoundByCascade(_cascadeName);
 	Censor censor;
-	censor.setGaussianBlur(objbuffer, matFile);
+	censor.SetFilledRect(objbuffer, matFile);
+	cv::imshow(_windowName, matFile);
 	cv::waitKey(0);
 	cv::destroyAllWindows();
 }

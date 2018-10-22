@@ -13,4 +13,7 @@ public:
 	static const std::string AskForTypeOfObject() { return std::string("Please enter type of object to detect. \n 0: Face \n 1: License Plate \n 2: Number of building\n "); }
 	static const std::string CouldntLoadCascade(const std::string& cascadeName) { return std::string("Couldn't load cascade " +  cascadeName + " \n "); }
 	static const std::string CouldntLoadImage(const std::string& imageName) { return std::string("Couldn't load image" + imageName + " \n "); }
+	static const std::string UnableToFindWithCascade(const std::string& cascadeName) { return std::string("Couldn't find object by using " + cascadeName + " \n "); }
+	static const std::string UsingNewCascade(const std::string& cascadeName) { return std::string("Using new cascade:  " + cascadeName + " \n "); }
+	static const std::string FoundByCascade(const std::string& cascadeName) { return std::string("Found object by using:  " + cascadeName + " \n "); }
 };

@@ -60,6 +60,9 @@ artifacts/
 *.tlb
 *.tli
 *.jpg
+*.jpeg
+*.gif
+*.png
 *.png
 *.tlh
 *.tmp
