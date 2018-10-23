@@ -17,7 +17,7 @@ public:
 		_cascadeName = "C:\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml";
 		additionalCascades.push_back(_profileCascadeName);
 		additionalCascades.push_back(_eyeCascadeName);
-		MethodToFindRotation = ByFindingEyes;
+		MethodToFindRotation = ByFindingDetail;
 		maxWidth = 1000;
 		maxHeight = 1000;
 	};

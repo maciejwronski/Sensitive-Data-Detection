@@ -11,7 +11,7 @@ protected:
 
 	enum FindRotationOfGivenImage {
 		ByRotatingImage,
-		ByFindingDetail;
+		ByFindingDetail,
 	};
 
 	FindRotationOfGivenImage MethodToFindRotation;
@@ -35,7 +35,7 @@ protected:
 	virtual void DetectObjects();
 	virtual int CheckIfImageIsNotRotated() = 0;
 	virtual int CheckRotationByFindingDetail() = 0;
-	virtual int CheckRotationByRotatingImage();
+	virtual int CheckRotationByRotatingImage() = 0;
 public:
 	ObjectDetection(const std::string& filePath) : _filePath(filePath) {};
 	void ShowObjects();

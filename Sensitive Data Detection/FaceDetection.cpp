@@ -30,14 +30,20 @@ void FaceDetection::DetectObjects() {
 }
 
 int FaceDetection::CheckIfImageIsNotRotated() {
-
+	switch (MethodToFindRotation) {
+	case ByFindingDetail:
+		return CheckRotationByFindingDetail();
+		break;
+	case ByRotatingImage:
+		return CheckRotationByRotatingImage();
+		break;
+	}
+	return 0;
 }
 
 int FaceDetection::CheckRotationByFindingDetail() {
-	if (MethodToFindRotation != ByFindingDetail)
-		return;
+	return 0;
 }
 int FaceDetection::CheckRotationByRotatingImage() {
-	if (MethodToFindRotation != ByRotatingImage)
-		return;
+	return 0;
 }
