@@ -29,13 +29,14 @@ protected:
 	int maxHeight = 100;
 	int minWidth = 1;
 	int minHeight = 1;
-	bool LoadCascade();
-	bool LoadImage();
-	void CreateWindow();
-	virtual void DetectObjects();
-	virtual int CheckIfImageIsNotRotated() = 0;
-	virtual int CheckRotationByFindingDetail() = 0;
-	virtual int CheckRotationByRotatingImage() = 0;
+	bool LoadCascade(cv::CascadeClassifier& cascade,const std::string& cascadeName) const;
+	bool LoadImage(cv::Mat& matFile, const std::string& filePath);
+	void CreateWindow(const std::string& windowName) const;
+	int CheckRotationByRotatingImage(const cv::Mat& matFile) const;
+	int CheckIfImageIsNotRotated();
+	float Rad2Deg(float rad);
+	cv::Mat RotateImage(cv::Mat& Image, float angle);
+	virtual void DetectObjects(cv::CascadeClassifier& cascade,cv::Mat& matFile, std::vector<cv::Rect>& objbuffer, const int& minWidth, const int& minHeight, const int& maxWidth, const int& maxHeight) ;
 public:
 	ObjectDetection(const std::string& filePath) : _filePath(filePath) {};
 	void ShowObjects();
