@@ -32,7 +32,7 @@ protected:
 	bool LoadCascade(cv::CascadeClassifier& cascade,const std::string& cascadeName) const;
 	bool LoadImage(cv::Mat& matFile, const std::string& filePath);
 	void CreateWindow(const std::string& windowName) const;
-	int CheckRotationByRotatingImage(const cv::Mat& matFile) const;
+	bool CheckRotationByRotatingImage(cv::CascadeClassifier& cascade, const cv::Mat& matFile, std::vector<cv::Rect>& objs);
 	int CheckIfImageIsNotRotated();
 	float Rad2Deg(float rad);
 	cv::Mat RotateImage(cv::Mat& Image, float angle);

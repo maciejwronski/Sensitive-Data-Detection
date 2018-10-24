@@ -22,9 +22,20 @@ bool ObjectDetection::LoadImage(cv::Mat& matFile, const std::string& filePath)
 void ObjectDetection::CreateWindow(const std::string& windowName) const {
 	cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE*0.3);
 }
-int ObjectDetection::CheckRotationByRotatingImage(const cv::Mat& matFile) const
-{
-	return 0;
+bool ObjectDetection::CheckRotationByRotatingImage(cv::CascadeClassifier& cascade, const cv::Mat& matFile, std::vector<cv::Rect>& objs){
+		for (int i = 180; i > 0; i/=2) {
+			std::cout << "SEARCHING FOR " << i << std::endl;
+			cv::Mat img = matFile;
+			img = RotateImage(img, i);
+			cascade.detectMultiScale(img, objbuffer, 1.1, 2, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+			if (!objbuffer.empty()) {
+				std::cout << Messages::FoundWithRotator();
+				ObjectDetection::matFile = img;
+				cv::imshow("Rotated Image", img);
+				return true;
+			}
+		}
+		return false;
 }
 void ObjectDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& matFile, std::vector<cv::Rect>& objbuffer, const int& minWidth, const int& minHeight, const int& maxWidth, const int& maxHeight)  {
 	cv::Mat matGray;
@@ -60,6 +71,7 @@ void ObjectDetection::ShowObjects()
 	if (!LoadImage(matFile, _filePath) || !LoadCascade(_cascade, _cascadeName))
 		return;
 	CreateWindow(_windowName);
+	cv::imshow("Original Image", matFile);
 	DetectObjects(_cascade, matFile, objbuffer, minWidth, minHeight, maxWidth, maxHeight);
 	Censor censor;
 	censor.SetFilledRect(objbuffer, matFile);

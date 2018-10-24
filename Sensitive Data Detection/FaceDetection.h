@@ -16,11 +16,11 @@ class FaceDetection : public ObjectDetection  {
 	void SetWidthAndHeightSame(cv::Rect& obj, cv::Rect& obj2);
 public:
 	FaceDetection(const std::string& filePath) : ObjectDetection(filePath) {
-		_windowName = "Face Detection Window";
+		_windowName = "Final - Face Detection Window";
 		_cascadeName = "C:\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml";
 		additionalCascades.push_back(_profileCascadeName);
 		additionalCascades.push_back(_eyeCascadeName);
-		MethodToFindRotation = ByFindingDetail;
+		MethodToFindRotation = ByRotatingImage;
 		maxWidth = 1000;
 		maxHeight = 1000;
 	};

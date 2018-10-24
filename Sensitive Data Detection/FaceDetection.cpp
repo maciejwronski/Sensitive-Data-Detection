@@ -7,11 +7,22 @@ void FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& matFi
 	cascade.detectMultiScale(matGray, objbuffer, 1.1, 2, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
 	if (!objbuffer.empty())
 		return;
+	else {
+		if (MethodToFindRotation == ByRotatingImage) {
+			if (CheckRotationByRotatingImage(cascade, matFile, objbuffer)) {
+				return;
+			}
+		}
+	}
 	std::cout << Messages::UnableToFindWithCascade(_cascadeName);
-	if (additionalCascades.empty())
+	if (additionalCascades.empty()) {
+		std::cout << Messages::TryingWithRotator();
+		CheckRotationByRotatingImage(cascade, matFile, objbuffer);
 		return;
-
+	}
 	for (const std::string& newCascade: additionalCascades) {
+		if (MethodToFindRotation == ByRotatingImage && newCascade == _eyeCascadeName)
+			break;
 		std::cout << Messages::UsingNewCascade(newCascade);
 		if (!LoadCascade(cascade,newCascade))
 			return;
@@ -26,7 +37,8 @@ void FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& matFi
 			if (newCascade == _eyeCascadeName) {
 				// what if image is rotated by 180?
 				float Degrees = CheckRotationByFindingDetail(matGray, objbuffer);
-				matFile = RotateImage(matGray, -Degrees);
+				matFile = RotateImage(matFile, -Degrees); ///// function works only on clockwise
+				cv::cvtColor(matFile, matGray, cv::COLOR_BGR2GRAY);
 				if (TryToApplyFaceDetectorsAgain(cascade, matGray, _mainCascade)) {
 					cv::imshow("New, image with applied rotator on MainCascade", matFile);
 				}
@@ -44,8 +56,13 @@ void FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& matFi
 			}
 			break;
 		}
-		else
+		else {
 			std::cout << Messages::UnableToFindWithCascade(newCascade);
+			if (MethodToFindRotation == ByRotatingImage) {
+				if (CheckRotationByRotatingImage(cascade, matFile, objbuffer))
+					return;
+			}
+		}
 	}
 	CreateWindow(_windowName);
 }
@@ -89,6 +106,7 @@ int FaceDetection::CheckRotationByFindingDetail(const cv::Mat& originalImage, st
 
 		float len = sqrt(pow(points[0].x - points[1].x, 2) + pow(points[0].y - points[1].y, 2));
 		float a = points[0].x - points[1].x;
+
 
 		return Rad2Deg(cos(a / len)); 
 	}
