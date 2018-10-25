@@ -17,6 +17,6 @@ public:
 	static const std::string UsingNewCascade(const std::string& cascadeName) { return std::string("Using new cascade:  " + cascadeName + " \n "); }
 	static const std::string FoundByCascade(const std::string& cascadeName) { return std::string("Found object by using:  " + cascadeName + " \n "); }
 	static const std::string CouldntFindWithRotator() { return std::string("Couldnt find object with used rotator \n "); }
-	static const std::string FoundWithRotator() { return std::string("Found objects by using rotator \n "); }
+	static const std::string FoundWithRotator(const std::string& cascadeName) { return std::string("Found objects by using rotator on Cascadename " + cascadeName + "\n"); }
 	static const std::string TryingWithRotator() { return std::string("Cascades are empty. Trying with rotator. \n "); }
 };

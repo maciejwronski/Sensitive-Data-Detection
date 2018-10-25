@@ -16,7 +16,7 @@ protected:
 
 	FindRotationOfGivenImage MethodToFindRotation;
 
-	std::vector<std::string> additionalCascades;
+	std::vector<std::string> cascadeVector;
 	std::string _windowName = "Detection Window";
 	std::string _cascadeName = "C:\\opencv\\sources\\data\\haarcascades\\";
 	std::string _filePath;
@@ -32,11 +32,11 @@ protected:
 	bool LoadCascade(cv::CascadeClassifier& cascade,const std::string& cascadeName) const;
 	bool LoadImage(cv::Mat& matFile, const std::string& filePath);
 	void CreateWindow(const std::string& windowName) const;
-	bool CheckRotationByRotatingImage(cv::CascadeClassifier& cascade, const cv::Mat& matFile, std::vector<cv::Rect>& objs);
 	int CheckIfImageIsNotRotated();
 	float Rad2Deg(float rad);
 	cv::Mat RotateImage(cv::Mat& Image, float angle);
-	virtual void DetectObjects(cv::CascadeClassifier& cascade,cv::Mat& matFile, std::vector<cv::Rect>& objbuffer, const int& minWidth, const int& minHeight, const int& maxWidth, const int& maxHeight) ;
+	cv::Mat ReturnImageWithMostPossibleObjects(cv::CascadeClassifier & cascade, const cv::Mat & matFile);
+	virtual cv::Mat DetectObjects(cv::CascadeClassifier& cascade,cv::Mat& matFile, std::vector<cv::Rect>& objbuffer, const int& minWidth, const int& minHeight, const int& maxWidth, const int& maxHeight) ;
 public:
 	ObjectDetection(const std::string& filePath) : _filePath(filePath) {};
 	void ShowObjects();
