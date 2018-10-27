@@ -19,6 +19,20 @@ bool ObjectDetection::LoadImage(cv::Mat& matFile, const std::string& filePath)
 	}
 	else return true;
 }
+std::vector<cv::Rect> ObjectDetection::EliminateFalsePositives(std::vector<cv::Rect>& faceVector, std::vector<cv::Rect>& eyeVector)
+{
+	std::vector<cv::Rect> temp = eyeVector;
+	for (std::vector<cv::Rect>::iterator ite = eyeVector.begin(); ite != eyeVector.end(); ite++) {
+		for (std::vector<cv::Rect>::iterator itf = faceVector.begin(); itf != faceVector.end(); itf++) {
+			if ((*ite | *itf) == *itf) {
+				break;
+			}
+			else {
+				eyeVector.erase(ite);
+			}
+		}
+	}
+}
 void ObjectDetection::CreateWindow(const std::string& windowName) const {
 	cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE*0.3);
 }
@@ -26,6 +40,7 @@ void ObjectDetection::CreateWindow(const std::string& windowName) const {
 cv::Mat ObjectDetection::ReturnImageWithMostPossibleObjects(cv::CascadeClassifier& cascade, const cv::Mat& matFile) {
 	int Max = 0;
 	int index = 0;
+	std::vector <cv::Rect> objbuffer;
 	for (int i = 0; i < 360; i += 30) {
 		std::cout << "SEARCHING FOR " << i << std::endl;
 		cv::Mat img = matFile;
@@ -37,17 +52,18 @@ cv::Mat ObjectDetection::ReturnImageWithMostPossibleObjects(cv::CascadeClassifie
 				index = i;
 			}
 		}
+		objbuffer.clear();
 	}
 	cv::Mat img = matFile;
 	cv::Mat img2;
 	img2 = RotateImage(img, index);
 	return img2;
 }
-cv::Mat ObjectDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& matFile, std::vector<cv::Rect>& objbuffer, const int& minWidth, const int& minHeight, const int& maxWidth, const int& maxHeight)  {
+cv::Mat ObjectDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& matFile, std::vector<cv::Rect>& objbuffer1, std::vector<cv::Rect>& objbuffer2, std::vector<cv::Rect>& objbuffer3, const int& minWidth, const int& minHeight, const int& maxWidth, const int& maxHeight)  {
 	cv::Mat matGray;
 	cv::cvtColor(matFile, matGray, cv::COLOR_BGR2GRAY);
-	cascade.detectMultiScale(matGray, objbuffer, 1.1, 2, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));   
-	if (!objbuffer.empty()) {
+	cascade.detectMultiScale(matGray, objbuffer1, 1.1, 2, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));   
+	if (!objbuffer1.empty()) {
 		std::cout << Messages::FoundByCascade(_cascadeName);
 		return matFile;
 	}
@@ -80,9 +96,23 @@ void ObjectDetection::ShowObjects()
 		return;
 	CreateWindow(_windowName);
 	cv::imshow("Original Image", matFile);
-	matFile = DetectObjects(_cascade, matFile, objbuffer, minWidth, minHeight, maxWidth, maxHeight);
+	matFile = DetectObjects(_cascade, matFile, objbuffer1, objbuffer2, objbuffer3, minWidth, minHeight, maxWidth, maxHeight);
+	//EliminateFalsePositives(objbuffer1, objbuffer3);
 	Censor censor;
-	censor.SetFilledRect(objbuffer, matFile);
+	switch (censor.currType) {
+		case censor.GaussianBlur:
+			censor.SetGaussianBlur(objbuffer1, matFile);
+		break;
+		case censor.Rect:
+			censor.SetRect(objbuffer1, matFile);
+		break;
+		case censor.FilledRect:
+			censor.SetFilledRect(objbuffer1, matFile, cv::Scalar(255, 0, 0));
+			censor.SetFilledRect(objbuffer2, matFile, cv::Scalar(0, 255, 0));
+			censor.SetFilledRect(objbuffer3, matFile, cv::Scalar(0, 0, 255));
+		break;
+
+	}
 	cv::imshow(_windowName, matFile);
 	cv::waitKey(0);
 	cv::destroyAllWindows();
