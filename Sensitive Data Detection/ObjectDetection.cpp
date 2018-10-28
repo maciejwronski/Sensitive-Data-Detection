@@ -32,6 +32,7 @@ std::vector<cv::Rect> ObjectDetection::EliminateFalsePositives(std::vector<cv::R
 			}
 		}
 	}
+	return eyeVector;
 }
 void ObjectDetection::CreateWindow(const std::string& windowName) const {
 	cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE*0.3);

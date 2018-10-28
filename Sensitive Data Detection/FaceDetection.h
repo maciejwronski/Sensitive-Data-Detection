@@ -11,6 +11,7 @@ class FaceDetection : public ObjectDetection  {
 
 	int CheckRotationByFindingDetail(const cv::Mat& originalImage, std::vector<cv::Rect>& objects);
 	void SetWidthAndHeightSame(cv::Rect& obj, cv::Rect& obj2);
+	void FindTwoClosestRectangles(std::vector<cv::Rect>& vec);
 public:
 
 	FaceDetection(const std::string& filePath) : ObjectDetection(filePath) {
@@ -19,7 +20,7 @@ public:
 		cascadeVector.push_back(_mainCascade);
 		cascadeVector.push_back(_profileCascadeName);
 		cascadeVector.push_back(_eyeCascadeName);
-		MethodToFindRotation = ByRotatingImage;
+		MethodToFindRotation = ByFindingDetail;
 		maxWidth = 1000;
 		maxHeight = 1000;
 	};

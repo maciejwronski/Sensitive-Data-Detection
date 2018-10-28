@@ -70,10 +70,15 @@ cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& ma
 				std::cout << Messages::FoundByCascade(newCascade);
 				if (newCascade == _eyeCascadeName) {
 					// what if image is rotated by 180?
+					if (objbuffer1.size() > 2)
+						FindTwoClosestRectangles(objbuffer1);
 					float Degrees = CheckRotationByFindingDetail(tempImage, objbuffer1);
+					Censor censor;
+					censor.SetFilledRect(objbuffer1, tempImage, cv::Scalar(0, 0, 0));
+					cv::imshow("Rotated image with Details", tempImage);
 					std::cout << "DEGREES" << Degrees << std::endl;
 					tempImage = RotateImage(matFile, -Degrees); ///// function works only on clockwise
-					cv::imshow("Rotated image with Details", tempImage);
+
 					if (!LoadCascade(cascade, _mainCascade))
 						return matFile;
 					cascade.detectMultiScale(tempImage, objbuffer1, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
@@ -104,22 +109,6 @@ int FaceDetection::CheckRotationByFindingDetail(const cv::Mat& originalImage, st
 		
 		return Rad2Deg(cos(a / len));
 	}
-	else if(objects.size() >2 ){ ///// what is possible num of eyes are 2+?
-		cv::Mat img;
-		img = originalImage;
-		SetWidthAndHeightSame(objects[0], objects[1]);
-		std::vector<cv::Point> points(2);
-
-		points[0] = objects[0].br();
-		points[1] = objects[1].br();
-		cv::line(img, points[0], points[1], cv::Scalar(255, 0, 0));
-
-		float len = sqrt(pow(points[0].x - points[1].x, 2) + pow(points[0].y - points[1].y, 2));
-		float a = points[0].x - points[1].x;
-
-
-		return Rad2Deg(cos(a / len)); 
-	}
 	else return 0;
 
 } 
@@ -133,5 +122,35 @@ void FaceDetection::SetWidthAndHeightSame(cv::Rect& obj, cv::Rect& obj2) {
 		obj.width = obj2.width;
 		obj.height = obj2.height;
 		//obj.y = obj2.y;
+	}
+}
+
+void FaceDetection::FindTwoClosestRectangles(std::vector<cv::Rect>& vec) {
+	int indexes[2];
+	int currMinDistance = 9999;
+	int tempDist = 0;
+	std::vector<cv::Point> vecbr;
+	std::vector<cv::Point> vectl;
+	for (int i = 0; i < vec.size(); i++) {
+		vecbr.push_back(vec[i].br());
+		vectl.push_back(vec[i].tl());
+	}
+
+	for (int i = 0; i < vec.size(); i++) {
+		for (int j = 0; j != i, j < vec.size(); j++) {
+			tempDist = sqrt(pow(vecbr[i].x - vectl[j].x, 2) + pow(vecbr[i].y - vectl[j].y, 2));
+			if (tempDist < currMinDistance) {
+				currMinDistance = tempDist;
+				indexes[0] = i;
+				indexes[1] = j;
+			}
+		}
+	}
+	for (int i = 0; i < vec.size(); i++) {
+		if (i == indexes[0] || i == indexes[1])
+			break;
+		else {
+			vec.erase(vec.begin() + i);
+		}
 	}
 }
