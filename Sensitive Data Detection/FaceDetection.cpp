@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "FaceDetection.h"
 
+// TODO: Image rotated by 180* on detail-based, Apply opposite rotation / what if face is rotated by 90+ / 269- degrees on detail-based 
 cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& matFile, std::vector<cv::Rect>& objbuffer1, std::vector<cv::Rect>& objbuffer2, std::vector<cv::Rect>& objbuffer3, const int& minWidth, const int& minHeight, const int& maxWidth, const int& maxHeight) {
 	if (MethodToFindRotation == ByRotatingImage) {
 		for (const std::string& newCascade : cascadeVector) {
@@ -11,7 +12,7 @@ cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& ma
 			cv::Mat tempImage = matFile;
 			cv::Mat tempImage2;
 			//cv::cvtColor(tempImage, matGray, cv::COLOR_BGR2GRAY);
-			tempImage2 = ReturnImageWithMostPossibleObjects(cascade, tempImage);
+			tempImage2 = ReturnImageWithMostPossibleObjects(cascade, tempImage, 30);
 			if(newCascade == _mainCascade)
 				cascade.detectMultiScale(tempImage2, objbuffer1, 1.1, 2, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
 			else if (newCascade == _profileCascadeName)
@@ -26,9 +27,9 @@ cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& ma
 			else {
 				std::cout << Messages::FoundWithRotator(newCascade);
 				if (newCascade == _mainCascade && !objbuffer1.empty()) {
-						std::cout << "Applying next cascades on main cascade" << std::endl;
 						cv::Mat tempImage = tempImage2;
 						for (int i = 1; i < 3; i++) {
+							std::cout << Messages::ApplyingNextCascade(cascadeVector[i]);
 							if (!LoadCascade(cascade, cascadeVector[i])) 
 								break;
 							if (i == 1) {
@@ -69,16 +70,14 @@ cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& ma
 			if (!objbuffer1.empty()) {
 				std::cout << Messages::FoundByCascade(newCascade);
 				if (newCascade == _eyeCascadeName) {
-					// what if image is rotated by 180?
 					if (objbuffer1.size() > 2)
 						FindTwoClosestRectangles(objbuffer1);
 					float Degrees = CheckRotationByFindingDetail(tempImage, objbuffer1);
-					Censor censor;
+					Censor censor(Censor::Types::FilledRect);
 					censor.SetFilledRect(objbuffer1, tempImage, cv::Scalar(0, 0, 0));
 					cv::imshow("Rotated image with Details", tempImage);
 					std::cout << "DEGREES" << Degrees << std::endl;
-					tempImage = RotateImage(matFile, -Degrees); ///// function works only on clockwise
-
+					tempImage = RotateImage(matFile, -Degrees); 
 					if (!LoadCascade(cascade, _mainCascade))
 						return matFile;
 					cascade.detectMultiScale(tempImage, objbuffer1, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
@@ -94,7 +93,7 @@ cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& ma
 
 
 int FaceDetection::CheckRotationByFindingDetail(const cv::Mat& originalImage, std::vector<cv::Rect>& objects) {
-	if (objects.size() == 2) { // found two eyes, calculate distance between br, then cos and angle.
+	if (objects.size() == 2) {
 		cv::Mat img;
 		img = originalImage;
 		SetWidthAndHeightSame(objects[0], objects[1]);
@@ -103,7 +102,7 @@ int FaceDetection::CheckRotationByFindingDetail(const cv::Mat& originalImage, st
 		points[0] = objects[0].br();
 		points[1] = objects[1].br();
 		cv::line(img, points[0], points[1], cv::Scalar(255, 0, 0));
-
+	
 		float len = sqrt(pow(points[0].x - points[1].x, 2) + pow(points[0].y - points[1].y, 2));
 		float a = points[0].x - points[1].x;
 		

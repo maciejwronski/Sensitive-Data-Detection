@@ -10,8 +10,8 @@ public:
 		FilledRect
 	};
 	Types currType = FilledRect;
-
-	cv::Mat SetRect(const std::vector<cv::Rect>& objbuffer, const cv::Mat& imgMatrix);
+	Censor(Types value) : currType(value) {};
+	cv::Mat SetRect(const std::vector<cv::Rect>& objbuffer, const cv::Mat& imgMatrix, const cv::Scalar& scalar);
 	cv::Mat SetFilledRect(const std::vector<cv::Rect>& objbuffer, const cv::Mat & imgMatrix, const cv::Scalar& scalar);
 	cv::Mat SetGaussianBlur(const std::vector<cv::Rect>& objbuffer, const cv::Mat& imgMatrix);
 };

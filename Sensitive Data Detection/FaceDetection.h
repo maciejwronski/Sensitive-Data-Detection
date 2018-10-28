@@ -17,10 +17,13 @@ public:
 	FaceDetection(const std::string& filePath) : ObjectDetection(filePath) {
 		_windowName = "Final - Face Detection Window";
 		_cascadeName = _mainCascade;
+
 		cascadeVector.push_back(_mainCascade);
 		cascadeVector.push_back(_profileCascadeName);
 		cascadeVector.push_back(_eyeCascadeName);
+
 		MethodToFindRotation = ByFindingDetail;
+
 		maxWidth = 1000;
 		maxHeight = 1000;
 	};

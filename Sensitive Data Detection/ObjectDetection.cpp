@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "ObjectDetection.h"
 
+// TODO: Eliminate FalsePositives
 bool ObjectDetection::LoadCascade(cv::CascadeClassifier& cascade,const std::string& cascadeName) const
 {
 	if (!(cascade.load(cascadeName))) {
@@ -38,11 +39,11 @@ void ObjectDetection::CreateWindow(const std::string& windowName) const {
 	cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE*0.3);
 }
 
-cv::Mat ObjectDetection::ReturnImageWithMostPossibleObjects(cv::CascadeClassifier& cascade, const cv::Mat& matFile) {
+cv::Mat ObjectDetection::ReturnImageWithMostPossibleObjects(cv::CascadeClassifier& cascade, const cv::Mat& matFile, float angle) {
 	int Max = 0;
 	int index = 0;
 	std::vector <cv::Rect> objbuffer;
-	for (int i = 0; i < 360; i += 30) {
+	for (int i = 0; i < 360; i += angle) {
 		std::cout << "SEARCHING FOR " << i << std::endl;
 		cv::Mat img = matFile;
 		img = RotateImage(img, i);
@@ -60,6 +61,7 @@ cv::Mat ObjectDetection::ReturnImageWithMostPossibleObjects(cv::CascadeClassifie
 	img2 = RotateImage(img, index);
 	return img2;
 }
+
 cv::Mat ObjectDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& matFile, std::vector<cv::Rect>& objbuffer1, std::vector<cv::Rect>& objbuffer2, std::vector<cv::Rect>& objbuffer3, const int& minWidth, const int& minHeight, const int& maxWidth, const int& maxHeight)  {
 	cv::Mat matGray;
 	cv::cvtColor(matFile, matGray, cv::COLOR_BGR2GRAY);
@@ -73,10 +75,11 @@ int ObjectDetection::CheckIfImageIsNotRotated()
 {
 	return 0;
 }
-float ObjectDetection::Rad2Deg(float rad)
+float ObjectDetection::Rad2Deg(const float& rad)
 {
 	return rad * 180 / CV_PI;
 }
+
 cv::Mat ObjectDetection::RotateImage(cv::Mat &Image, float angle)
 {
 	cv::Mat src = Image;
@@ -91,7 +94,7 @@ cv::Mat ObjectDetection::RotateImage(cv::Mat &Image, float angle)
 
 	return dst;
 }
-void ObjectDetection::ShowObjects()
+void ObjectDetection::ShowObjects(int  censorType)
 {
 	if (!LoadImage(matFile, _filePath) || !LoadCascade(_cascade, _cascadeName))
 		return;
@@ -99,13 +102,17 @@ void ObjectDetection::ShowObjects()
 	cv::imshow("Original Image", matFile);
 	matFile = DetectObjects(_cascade, matFile, objbuffer1, objbuffer2, objbuffer3, minWidth, minHeight, maxWidth, maxHeight);
 	//EliminateFalsePositives(objbuffer1, objbuffer3);
-	Censor censor;
+
+	Censor censor((Censor::Types)censorType);
+	std::cout << (Censor::Types)censorType << std::endl;
 	switch (censor.currType) {
 		case censor.GaussianBlur:
 			censor.SetGaussianBlur(objbuffer1, matFile);
 		break;
 		case censor.Rect:
-			censor.SetRect(objbuffer1, matFile);
+			censor.SetRect(objbuffer1, matFile, cv::Scalar(255, 0, 0));
+			censor.SetRect(objbuffer2, matFile, cv::Scalar(0, 255, 0));
+			censor.SetRect(objbuffer3, matFile, cv::Scalar(0, 0, 255));
 		break;
 		case censor.FilledRect:
 			censor.SetFilledRect(objbuffer1, matFile, cv::Scalar(255, 0, 0));

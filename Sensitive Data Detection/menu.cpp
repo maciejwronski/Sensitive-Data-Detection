@@ -37,3 +37,14 @@ short Menu::GetTypeOfObjectToDetect()
 	}
 	return _selectTypeOfObject;
 }
+
+short Menu::GetTypeOfCensor()
+{
+	std::cout << Messages::AskForTypeOfCensor();
+	while (!(std::cin >> _selectTypeOfCensor) || _selectTypeOfCensor > 2 || _selectTypeOfCensor < 0) {
+		std::cin.clear();
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		std::cout << Messages::AskForTypeOfCensor();
+	}
+	return _selectTypeOfCensor;
+}
