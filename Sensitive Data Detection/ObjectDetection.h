@@ -42,7 +42,7 @@ protected:
 	cv::Mat ReturnImageWithMostPossibleObjects(cv::CascadeClassifier & cascade, const cv::Mat & matFile, float angle);
 	int CheckIfImageIsNotRotated();
 	float Rad2Deg(const float& rad);
-	std::vector<cv::Rect> EliminateFalsePositives(std::vector<cv::Rect>& faceCascade, std::vector<cv::Rect>& eyeCascade);
+	void EliminateFalsePositives(std::vector<cv::Rect>& faceCascade, std::vector<cv::Rect>& eyeCascade);
 	void CreateWindow(const std::string& windowName) const;
 	virtual cv::Mat DetectObjects(cv::CascadeClassifier& cascade,cv::Mat& matFile, std::vector<cv::Rect>& objbuffer1, std::vector<cv::Rect>& objbuffer2, std::vector<cv::Rect>& objbuffer3, const int& minWidth, const int& minHeight, const int& maxWidth, const int& maxHeight) ;
 public:

@@ -22,7 +22,7 @@ public:
 		cascadeVector.push_back(_profileCascadeName);
 		cascadeVector.push_back(_eyeCascadeName);
 
-		MethodToFindRotation = ByFindingDetail;
+		MethodToFindRotation = ByRotatingImage;
 
 		maxWidth = 1000;
 		maxHeight = 1000;

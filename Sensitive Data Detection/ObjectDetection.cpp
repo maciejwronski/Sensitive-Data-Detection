@@ -1,8 +1,7 @@
 #include "stdafx.h"
 #include "ObjectDetection.h"
 
-// TODO: Eliminate FalsePositives
-bool ObjectDetection::LoadCascade(cv::CascadeClassifier& cascade,const std::string& cascadeName) const
+bool ObjectDetection::LoadCascade(cv::CascadeClassifier& cascade, const std::string& cascadeName) const
 {
 	if (!(cascade.load(cascadeName))) {
 		std::cout << Messages::CouldntLoadCascade(cascadeName);
@@ -20,21 +19,29 @@ bool ObjectDetection::LoadImage(cv::Mat& matFile, const std::string& filePath)
 	}
 	else return true;
 }
-std::vector<cv::Rect> ObjectDetection::EliminateFalsePositives(std::vector<cv::Rect>& faceVector, std::vector<cv::Rect>& eyeVector)
+void ObjectDetection::EliminateFalsePositives(std::vector<cv::Rect>& faceVector, std::vector<cv::Rect>& eyeVector)
 {
-	std::vector<cv::Rect> temp = eyeVector;
-	for (std::vector<cv::Rect>::iterator ite = eyeVector.begin(); ite != eyeVector.end(); ite++) {
-		for (std::vector<cv::Rect>::iterator itf = faceVector.begin(); itf != faceVector.end(); itf++) {
-			if ((*ite | *itf) == *itf) {
+	int val = 0;
+	std::vector<int> indexes;
+	for (int i = 0; i < eyeVector.size(); i++) {
+		val = 0;
+		for (int j = 0; j < faceVector.size(); j++) {
+			if ((eyeVector[i] | faceVector[j]) == faceVector[j]) {
+				val++;
 				break;
 			}
-			else {
-				eyeVector.erase(ite);
-			}
+		}
+		if (val == 0) {
+			indexes.push_back(i);
 		}
 	}
-	return eyeVector;
+	std::sort(indexes.begin(), indexes.end());
+	for (int i = indexes.size()-1; i >= 0; i--) {
+		eyeVector[indexes[i]] = eyeVector.back();
+		eyeVector.pop_back();
+	}
 }
+
 void ObjectDetection::CreateWindow(const std::string& windowName) const {
 	cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE*0.3);
 }
@@ -101,7 +108,7 @@ void ObjectDetection::ShowObjects(int  censorType)
 	CreateWindow(_windowName);
 	cv::imshow("Original Image", matFile);
 	matFile = DetectObjects(_cascade, matFile, objbuffer1, objbuffer2, objbuffer3, minWidth, minHeight, maxWidth, maxHeight);
-	//EliminateFalsePositives(objbuffer1, objbuffer3);
+	EliminateFalsePositives(objbuffer1, objbuffer3);
 
 	Censor censor((Censor::Types)censorType);
 	std::cout << (Censor::Types)censorType << std::endl;
