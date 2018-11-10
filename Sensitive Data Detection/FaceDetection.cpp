@@ -62,25 +62,37 @@ cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& ma
 			if (!LoadCascade(cascade, newCascade))
 				return matFile;
 			if (newCascade == _eyeCascadeName) {
-				cascade.detectMultiScale(tempImage, objbuffer1, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+				cascade.detectMultiScale(tempImage, objbuffer3, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
 			}
 			else if (newCascade == _profileCascadeName) {
-				cascade.detectMultiScale(tempImage, objbuffer1, 1.1, 1, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+				cascade.detectMultiScale(tempImage, objbuffer2, 1.1, 1, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
 			}
-			if (!objbuffer1.empty()) {
+			if (!objbuffer3.empty() || !objbuffer2.empty()) {
 				std::cout << Messages::FoundByCascade(newCascade);
 				if (newCascade == _eyeCascadeName) {
-					if (objbuffer1.size() > 2)
-						FindTwoClosestRectangles(objbuffer1);
-					float Degrees = CheckRotationByFindingDetail(tempImage, objbuffer1);
+					if (objbuffer3.size() > 2)
+						FindTwoClosestRectangles(objbuffer3);
+					cv::Point2f MiddleOfTwoPoints;
+					float Degrees = CheckRotationByFindingDetail(tempImage, objbuffer3, MiddleOfTwoPoints);
+
 					Censor censor(Censor::Types::FilledRect);
-					censor.SetFilledRect(objbuffer1, tempImage, cv::Scalar(0, 0, 0));
+					censor.SetFilledRect(objbuffer3, tempImage, cv::Scalar(0, 0, 0));
+
 					cv::imshow("Rotated image with Details", tempImage);
 					std::cout << "DEGREES" << Degrees << std::endl;
-					tempImage = RotateImage(matFile, -Degrees); 
+
+					cv::circle(tempImage, MiddleOfTwoPoints, 3, cv::Scalar(255, 0, 255));
+					tempImage = RotateImage(matFile, Degrees, MiddleOfTwoPoints);
 					if (!LoadCascade(cascade, _mainCascade))
 						return matFile;
 					cascade.detectMultiScale(tempImage, objbuffer1, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+
+					float tryToRotateAroundDegrees = 90;
+					while(objbuffer1.size() == 0 || tryToRotateAroundDegrees < 360){
+						tempImage = RotateImage(tempImage, tryToRotateAroundDegrees);
+						cascade.detectMultiScale(tempImage, objbuffer1, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+						tryToRotateAroundDegrees += 90;
+					}
 					return tempImage;
 				}
 			}
@@ -92,25 +104,29 @@ cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& ma
 }
 
 
-int FaceDetection::CheckRotationByFindingDetail(const cv::Mat& originalImage, std::vector<cv::Rect>& objects) {
+int FaceDetection::CheckRotationByFindingDetail(const cv::Mat& originalImage, std::vector<cv::Rect>& objects, cv::Point2f& Middle) {
 	if (objects.size() == 2) {
 		cv::Mat img;
 		img = originalImage;
 		SetWidthAndHeightSame(objects[0], objects[1]);
 		std::vector<cv::Point> points(2);
-		
-		points[0] = objects[0].br();
-		points[1] = objects[1].br();
+
+		points[0] = objects[0].tl();
+		points[1] = objects[1].tl();
 		cv::line(img, points[0], points[1], cv::Scalar(255, 0, 0));
-	
+
+
+		Middle = CalculateMiddleOfTwoPoints(points[0], points[1]);
+
+
 		float len = sqrt(pow(points[0].x - points[1].x, 2) + pow(points[0].y - points[1].y, 2));
 		float a = points[0].x - points[1].x;
-		
-		return Rad2Deg(cos(a / len));
+
+		return FindRemainingAngle(points[0], points[1], Middle) * Rad2Deg(cos(a / len));
 	}
 	else return 0;
 
-} 
+}
 void FaceDetection::SetWidthAndHeightSame(cv::Rect& obj, cv::Rect& obj2) {
 	if (obj.width*obj.height < obj2.width*obj2.height) {
 		obj2.width = obj.width;
@@ -153,3 +169,11 @@ void FaceDetection::FindTwoClosestRectangles(std::vector<cv::Rect>& vec) {
 		}
 	}
 }
+
+int FaceDetection::FindRemainingAngle(const cv::Point2f& point1, const cv::Point2f& point2, const cv::Point& axisPoint) {
+
+	if (point1.x < point2.x && point1.y > point2.y)
+		return -1;
+	else return 1;
+}
+

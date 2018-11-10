@@ -39,13 +39,17 @@ protected:
 	bool LoadCascade(cv::CascadeClassifier& cascade, const std::string& cascadeName) const;
 	bool LoadImage(cv::Mat& matFile, const std::string& filePath);
 	cv::Mat RotateImage(cv::Mat& Image, float angle);
+	cv::Mat RotateImage(cv::Mat & Image, float angle,const cv::Point2f& point);
 	cv::Mat ReturnImageWithMostPossibleObjects(cv::CascadeClassifier & cascade, const cv::Mat & matFile, float angle);
+	cv::Point2f FindRotatedPointByDegrees(const cv::Point2f& point, const cv::Point2f& AxisPoint, int degree);
 	int CheckIfImageIsNotRotated();
 	float Rad2Deg(const float& rad);
+	float Deg2Rad(const float & deg);
 	void EliminateFalsePositives(std::vector<cv::Rect>& faceCascade, std::vector<cv::Rect>& eyeCascade);
 	void CreateWindow(const std::string& windowName) const;
 	virtual cv::Mat DetectObjects(cv::CascadeClassifier& cascade,cv::Mat& matFile, std::vector<cv::Rect>& objbuffer1, std::vector<cv::Rect>& objbuffer2, std::vector<cv::Rect>& objbuffer3, const int& minWidth, const int& minHeight, const int& maxWidth, const int& maxHeight) ;
 public:
 	ObjectDetection(const std::string& filePath) : _filePath(filePath) {};
+	cv::Point2f CalculateMiddleOfTwoPoints(const cv::Point2f & point1,const cv::Point2f & point2);
 	void ShowObjects(int  censorType);
 };

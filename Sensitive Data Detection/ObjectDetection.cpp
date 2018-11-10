@@ -69,6 +69,14 @@ cv::Mat ObjectDetection::ReturnImageWithMostPossibleObjects(cv::CascadeClassifie
 	return img2;
 }
 
+cv::Point2f ObjectDetection::FindRotatedPointByDegrees(const cv::Point2f & point, const cv::Point2f & AxisPoint, int degree)
+{
+	cv::Point2f pointnew;
+	pointnew.x = cos(Deg2Rad(degree)) * (point.x - AxisPoint.x) - sin(Deg2Rad(degree)) * (point.y - AxisPoint.y) + AxisPoint.x;
+	pointnew.y = sin(Deg2Rad(degree)) * (point.x - AxisPoint.x) + cos(Deg2Rad(degree)) * (point.y - AxisPoint.y) + AxisPoint.y;
+	return pointnew;
+}
+
 cv::Mat ObjectDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& matFile, std::vector<cv::Rect>& objbuffer1, std::vector<cv::Rect>& objbuffer2, std::vector<cv::Rect>& objbuffer3, const int& minWidth, const int& minHeight, const int& maxWidth, const int& maxHeight)  {
 	cv::Mat matGray;
 	cv::cvtColor(matFile, matGray, cv::COLOR_BGR2GRAY);
@@ -87,6 +95,11 @@ float ObjectDetection::Rad2Deg(const float& rad)
 	return rad * 180 / CV_PI;
 }
 
+float ObjectDetection::Deg2Rad(const float& deg)
+{
+	return deg * CV_PI / 180;
+}
+
 cv::Mat ObjectDetection::RotateImage(cv::Mat &Image, float angle)
 {
 	cv::Mat src = Image;
@@ -101,6 +114,26 @@ cv::Mat ObjectDetection::RotateImage(cv::Mat &Image, float angle)
 
 	return dst;
 }
+
+cv::Mat ObjectDetection::RotateImage(cv::Mat &Image, float angle, const cv::Point2f& point)
+{
+	cv::Mat src = Image;
+	
+	//cv::Point2f center((src.cols - 1) / 2.0, (src.rows - 1) / 2.0);
+	cv::Mat rot = cv::getRotationMatrix2D(point, angle, 1.0);
+	cv::Rect2f bbox = cv::RotatedRect(cv::Point2f(), src.size(), angle).boundingRect2f();
+	rot.at<double>(0, 2) += bbox.width / 2.0 - src.cols / 2.0;
+	rot.at<double>(1, 2) += bbox.height / 2.0 - src.rows / 2.0;
+	cv::Mat dst;
+	cv::warpAffine(src, dst, rot, bbox.size());
+
+	return dst;
+}
+
+cv::Point2f ObjectDetection::CalculateMiddleOfTwoPoints(const cv::Point2f& point1,const cv::Point2f& point2) {
+	return cv::Point2f((point1.x + point2.x) / 2.0, (point1.y + point2.y) / 2);
+}
+
 void ObjectDetection::ShowObjects(int  censorType)
 {
 	if (!LoadImage(matFile, _filePath) || !LoadCascade(_cascade, _cascadeName))
@@ -109,6 +142,7 @@ void ObjectDetection::ShowObjects(int  censorType)
 	cv::imshow("Original Image", matFile);
 	matFile = DetectObjects(_cascade, matFile, objbuffer1, objbuffer2, objbuffer3, minWidth, minHeight, maxWidth, maxHeight);
 	EliminateFalsePositives(objbuffer1, objbuffer3);
+	
 
 	Censor censor((Censor::Types)censorType);
 	std::cout << (Censor::Types)censorType << std::endl;
