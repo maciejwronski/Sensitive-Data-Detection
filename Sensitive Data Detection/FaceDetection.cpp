@@ -57,50 +57,79 @@ cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& ma
 		objbuffer1.insert(std::end(objbuffer1), std::begin(objbuffer3), std::end(objbuffer3));
 	}
 	else if (MethodToFindRotation == ByFindingDetail) {
-		cv::Mat tempImage = matFile;
-		for (const std::string& newCascade : cascadeVector) {
-			if (!LoadCascade(cascade, newCascade))
+			cv::Mat tempImage = matFile;
+
+
+			/*/ Let's be sure, that we can't find face right now */
+			if (!LoadCascade(cascade, _mainCascade))
 				return matFile;
-			if (newCascade == _eyeCascadeName) {
-				cascade.detectMultiScale(tempImage, objbuffer3, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+			cascade.detectMultiScale(tempImage, objbuffer1, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+			if (!LoadCascade(cascade, _profileCascadeName))
+				return matFile;
+			cascade.detectMultiScale(tempImage, objbuffer2, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+			
+			if (objbuffer1.size() != 0 || objbuffer2.size() != 0) {
+				if (!LoadCascade(cascade, _eyeCascadeName))
+					return matFile;
+				cascade.detectMultiScale(tempImage, objbuffer3, 1.1, 1, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+				return tempImage;
 			}
-			else if (newCascade == _profileCascadeName) {
-				cascade.detectMultiScale(tempImage, objbuffer2, 1.1, 1, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
-			}
-			if (!objbuffer3.empty() || !objbuffer2.empty()) {
-				std::cout << Messages::FoundByCascade(newCascade);
-				if (newCascade == _eyeCascadeName) {
-					if (objbuffer3.size() > 2)
-						FindTwoClosestRectangles(objbuffer3);
-					cv::Point2f MiddleOfTwoPoints;
-					float Degrees = CheckRotationByFindingDetail(tempImage, objbuffer3, MiddleOfTwoPoints);
+			if (!LoadCascade(cascade, _eyeCascadeName))
+				return matFile;
+			cascade.detectMultiScale(tempImage, objbuffer3, 1.1, 2, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+			if (!objbuffer3.empty()) {
+				std::cout << Messages::FoundByCascade(_eyeCascadeName);
+				if (objbuffer3.size() > 2)
+					FindTwoClosestRectangles(objbuffer3);
 
-					Censor censor(Censor::Types::FilledRect);
-					censor.SetFilledRect(objbuffer3, tempImage, cv::Scalar(0, 0, 0));
+				cv::Point2f MiddleOfTwoPoints;
+				float Degrees = CheckRotationByFindingDetail(tempImage, objbuffer3, MiddleOfTwoPoints);
+				std::cout << "Rotating image by: " << Degrees << " \n";
+				tempImage = RotateImage(matFile, Degrees, MiddleOfTwoPoints);
 
-					cv::imshow("Rotated image with Details", tempImage);
-					std::cout << "DEGREES" << Degrees << std::endl;
-
-					cv::circle(tempImage, MiddleOfTwoPoints, 3, cv::Scalar(255, 0, 255));
-					tempImage = RotateImage(matFile, Degrees, MiddleOfTwoPoints);
-					if (!LoadCascade(cascade, _mainCascade))
+				/*After rotating Apply */
+				for (int i = 0; i < 2; ++i) {
+					if (!LoadCascade(cascade, cascadeVector[i]))
 						return matFile;
-					cascade.detectMultiScale(tempImage, objbuffer1, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+					if(cascadeVector[i] == _mainCascade)
+						cascade.detectMultiScale(tempImage, objbuffer1, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+					else
+						cascade.detectMultiScale(tempImage, objbuffer2, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
 
 					float tryToRotateAroundDegrees = 90;
-					while(objbuffer1.size() == 0 || tryToRotateAroundDegrees < 360){
-						tempImage = RotateImage(tempImage, tryToRotateAroundDegrees);
-						cascade.detectMultiScale(tempImage, objbuffer1, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
-						tryToRotateAroundDegrees += 90;
+					if (cascadeVector[i] == _mainCascade) {
+						while (objbuffer1.size() == 0 && tryToRotateAroundDegrees < 360) {
+							tempImage = RotateImage(tempImage, tryToRotateAroundDegrees);
+							cascade.detectMultiScale(tempImage, objbuffer1, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+							tryToRotateAroundDegrees += 90;
+							std::cout << tryToRotateAroundDegrees << std::endl;
+						}
 					}
+
+					else {
+						while (objbuffer2.size() == 0 || tryToRotateAroundDegrees < 360) {
+							tempImage = RotateImage(tempImage, tryToRotateAroundDegrees);
+							std::cout << " dupa3" << std::endl;
+							cascade.detectMultiScale(tempImage, objbuffer2, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+							tryToRotateAroundDegrees += 90;
+						}
+					}
+
+					/* Apply eye cascade again to find eyes on rotated image */
+					if (!LoadCascade(cascade, _eyeCascadeName))
+						return matFile;
+					objbuffer3.clear();
+					cascade.detectMultiScale(tempImage, objbuffer3, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
 					return tempImage;
 				}
 			}
 			else {
-				std::cout << Messages::UnableToFindWithCascade(newCascade);
+				std::cout << Messages::UnableToFindWithCascade(_eyeCascadeName);
+				std::cout << "Applying Rotation method " << std::endl;
+				MethodToFindRotation = ByRotatingImage;
+				matFile = DetectObjects(_cascade, matFile, objbuffer1, objbuffer2, objbuffer3, minWidth, minHeight, maxWidth, maxHeight);
 			}
 		}
-	}
 }
 
 

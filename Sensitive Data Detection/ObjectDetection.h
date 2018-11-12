@@ -38,10 +38,12 @@ protected:
 
 	bool LoadCascade(cv::CascadeClassifier& cascade, const std::string& cascadeName) const;
 	bool LoadImage(cv::Mat& matFile, const std::string& filePath);
-	cv::Mat RotateImage(cv::Mat& Image, float angle);
+	cv::Mat RotateImage(cv::Mat& Image, double angle);
 	cv::Mat RotateImage(cv::Mat & Image, float angle,const cv::Point2f& point);
 	cv::Mat ReturnImageWithMostPossibleObjects(cv::CascadeClassifier & cascade, const cv::Mat & matFile, float angle);
 	cv::Point2f FindRotatedPointByDegrees(const cv::Point2f& point, const cv::Point2f& AxisPoint, int degree);
+	cv::Mat CropWhiteBorder(cv::Mat & Image);
+
 	int CheckIfImageIsNotRotated();
 	float Rad2Deg(const float& rad);
 	float Deg2Rad(const float & deg);

@@ -66,6 +66,7 @@ cv::Mat ObjectDetection::ReturnImageWithMostPossibleObjects(cv::CascadeClassifie
 	cv::Mat img = matFile;
 	cv::Mat img2;
 	img2 = RotateImage(img, index);
+	img2 = CropWhiteBorder(img2);
 	return img2;
 }
 
@@ -100,7 +101,7 @@ float ObjectDetection::Deg2Rad(const float& deg)
 	return deg * CV_PI / 180;
 }
 
-cv::Mat ObjectDetection::RotateImage(cv::Mat &Image, float angle)
+cv::Mat ObjectDetection::RotateImage(cv::Mat &Image, double angle)
 {
 	cv::Mat src = Image;
 
@@ -110,8 +111,8 @@ cv::Mat ObjectDetection::RotateImage(cv::Mat &Image, float angle)
 	rot.at<double>(0, 2) += bbox.width / 2.0 - src.cols / 2.0;
 	rot.at<double>(1, 2) += bbox.height / 2.0 - src.rows / 2.0;
 	cv::Mat dst;
-	cv::warpAffine(src, dst, rot, bbox.size());
-
+	cv::warpAffine(src, dst, rot, bbox.size(), cv::INTER_LINEAR, cv::BORDER_TRANSPARENT, cv::Scalar(255,255,255) );
+	dst = CropWhiteBorder(dst);
 	return dst;
 }
 
@@ -125,11 +126,25 @@ cv::Mat ObjectDetection::RotateImage(cv::Mat &Image, float angle, const cv::Poin
 	rot.at<double>(0, 2) += bbox.width / 2.0 - src.cols / 2.0;
 	rot.at<double>(1, 2) += bbox.height / 2.0 - src.rows / 2.0;
 	cv::Mat dst;
-	cv::warpAffine(src, dst, rot, bbox.size());
-
+	cv::warpAffine(src, dst, rot, bbox.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar(255, 255, 255));
+	dst = CropWhiteBorder(dst);
 	return dst;
 }
 
+cv::Mat ObjectDetection::CropWhiteBorder(cv::Mat& Image) {
+	std::vector<cv::Point> points;
+	points.reserve(Image.rows*Image.cols);
+	for (int j = 0; j < Image.rows; ++j)
+		for (int i = 0; i < Image.cols; ++i)
+		{
+			if (Image.at<cv::Vec3b>(j, i) != cv::Vec3b(255, 255, 255))
+			{
+				points.push_back(cv::Point(i, j));
+			}
+		}
+	cv::Rect bb = cv::boundingRect(points);
+	return Image(bb);
+}
 cv::Point2f ObjectDetection::CalculateMiddleOfTwoPoints(const cv::Point2f& point1,const cv::Point2f& point2) {
 	return cv::Point2f((point1.x + point2.x) / 2.0, (point1.y + point2.y) / 2);
 }
@@ -140,10 +155,11 @@ void ObjectDetection::ShowObjects(int  censorType)
 		return;
 	CreateWindow(_windowName);
 	cv::imshow("Original Image", matFile);
+	matFile = CropWhiteBorder(matFile);
+
+	CropWhiteBorder(matFile);
 	matFile = DetectObjects(_cascade, matFile, objbuffer1, objbuffer2, objbuffer3, minWidth, minHeight, maxWidth, maxHeight);
 	EliminateFalsePositives(objbuffer1, objbuffer3);
-	
-
 	Censor censor((Censor::Types)censorType);
 	std::cout << (Censor::Types)censorType << std::endl;
 	switch (censor.currType) {
@@ -162,6 +178,7 @@ void ObjectDetection::ShowObjects(int  censorType)
 		break;
 
 	}
+	matFile = CropWhiteBorder(matFile);
 	cv::imshow(_windowName, matFile);
 	cv::waitKey(0);
 	cv::destroyAllWindows();
