@@ -14,7 +14,7 @@ class FaceDetection : public ObjectDetection  {
 	void FindTwoClosestRectangles(std::vector<cv::Rect>& vec);
 	int FindRemainingAngle(const cv::Point2f & point1,const  cv::Point2f & point2,const cv::Point & axisPoint);
 public:
-
+	void ShowObjects(int  censorType);
 	FaceDetection(const std::string& filePath) : ObjectDetection(filePath) {
 		_windowName = "Final - Face Detection Window";
 		_cascadeName = _mainCascade;

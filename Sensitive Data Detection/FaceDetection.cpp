@@ -62,25 +62,31 @@ cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& ma
 
 			/*/ Let's be sure, that we can't find face right now */
 			if (!LoadCascade(cascade, _mainCascade))
-				return matFile;
+				return tempImage;
 			cascade.detectMultiScale(tempImage, objbuffer1, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
 			if (!LoadCascade(cascade, _profileCascadeName))
-				return matFile;
+				return tempImage;
 			cascade.detectMultiScale(tempImage, objbuffer2, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
 			
 			if (objbuffer1.size() != 0 || objbuffer2.size() != 0) {
 				if (!LoadCascade(cascade, _eyeCascadeName))
-					return matFile;
+					return tempImage;
 				cascade.detectMultiScale(tempImage, objbuffer3, 1.1, 1, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
 				return tempImage;
 			}
 			if (!LoadCascade(cascade, _eyeCascadeName))
 				return matFile;
-			cascade.detectMultiScale(tempImage, objbuffer3, 1.1, 2, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
+			cascade.detectMultiScale(tempImage, objbuffer3, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
 			if (!objbuffer3.empty()) {
-				std::cout << Messages::FoundByCascade(_eyeCascadeName);
-				if (objbuffer3.size() > 2)
+				if (objbuffer3.size() > 2) {
 					FindTwoClosestRectangles(objbuffer3);
+				}
+				cv::Mat tempImage2 = tempImage;
+				Censor censor(Censor::FilledRect);
+				censor.SetFilledRect(objbuffer3, tempImage2, cv::Scalar(255, 0, 0));
+				cv::imshow("Detected Eyes", tempImage2);
+				std::cout << Messages::FoundByCascade(_eyeCascadeName);
+
 
 				cv::Point2f MiddleOfTwoPoints;
 				float Degrees = CheckRotationByFindingDetail(tempImage, objbuffer3, MiddleOfTwoPoints);
@@ -109,7 +115,6 @@ cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& ma
 					else {
 						while (objbuffer2.size() == 0 || tryToRotateAroundDegrees < 360) {
 							tempImage = RotateImage(tempImage, tryToRotateAroundDegrees);
-							std::cout << " dupa3" << std::endl;
 							cascade.detectMultiScale(tempImage, objbuffer2, 1.1, 4, 0, cv::Size(minWidth, minHeight), cv::Size(maxWidth, maxHeight));
 							tryToRotateAroundDegrees += 90;
 						}
@@ -175,24 +180,28 @@ void FaceDetection::FindTwoClosestRectangles(std::vector<cv::Rect>& vec) {
 	int tempDist = 0;
 	std::vector<cv::Point> vecbr;
 	std::vector<cv::Point> vectl;
+
 	for (int i = 0; i < vec.size(); i++) {
 		vecbr.push_back(vec[i].br());
 		vectl.push_back(vec[i].tl());
 	}
 
 	for (int i = 0; i < vec.size(); i++) {
-		for (int j = 0; j != i, j < vec.size(); j++) {
+		for (int j = 0; j < vec.size(); j++) {
+			if (i == j)
+				continue;
 			tempDist = sqrt(pow(vecbr[i].x - vectl[j].x, 2) + pow(vecbr[i].y - vectl[j].y, 2));
 			if (tempDist < currMinDistance) {
 				currMinDistance = tempDist;
 				indexes[0] = i;
 				indexes[1] = j;
+				std::cout << indexes[0] << " " << indexes[1] << std::endl;
 			}
 		}
 	}
 	for (int i = 0; i < vec.size(); i++) {
 		if (i == indexes[0] || i == indexes[1])
-			break;
+			continue;
 		else {
 			vec.erase(vec.begin() + i);
 		}
@@ -206,3 +215,38 @@ int FaceDetection::FindRemainingAngle(const cv::Point2f& point1, const cv::Point
 	else return 1;
 }
 
+void FaceDetection::ShowObjects(int  censorType)
+{
+	if (!LoadImage(matFile, _filePath) || !LoadCascade(_cascade, _cascadeName))
+		return;
+	std::cout << "HEEJ" << std::endl;
+	CreateWindow(_windowName);
+	cv::imshow("Original Image", matFile);
+	matFile = CropWhiteBorder(matFile);
+
+	CropWhiteBorder(matFile);
+	matFile = DetectObjects(_cascade, matFile, objbuffer1, objbuffer2, objbuffer3, minWidth, minHeight, maxWidth, maxHeight);
+	EliminateFalsePositives(objbuffer1, objbuffer3);
+	Censor censor((Censor::Types)censorType);
+	std::cout << (Censor::Types)censorType << std::endl;
+	switch (censor.currType) {
+	case censor.GaussianBlur:
+		censor.SetGaussianBlur(objbuffer1, matFile);
+		break;
+	case censor.Rect:
+		censor.SetRect(objbuffer1, matFile, cv::Scalar(255, 0, 0));
+		censor.SetRect(objbuffer2, matFile, cv::Scalar(0, 255, 0));
+		censor.SetRect(objbuffer3, matFile, cv::Scalar(0, 0, 255));
+		break;
+	case censor.FilledRect:
+		censor.SetFilledRect(objbuffer1, matFile, cv::Scalar(255, 0, 0));
+		censor.SetFilledRect(objbuffer2, matFile, cv::Scalar(0, 255, 0));
+		censor.SetFilledRect(objbuffer3, matFile, cv::Scalar(0, 0, 255));
+		break;
+
+	}
+	matFile = CropWhiteBorder(matFile);
+	cv::imshow(_windowName, matFile);
+	cv::waitKey(0);
+	cv::destroyAllWindows();
+}

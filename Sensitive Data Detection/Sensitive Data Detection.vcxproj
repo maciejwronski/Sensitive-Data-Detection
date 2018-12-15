@@ -153,6 +153,7 @@
     <ClInclude Include="Censor.h" />
     <ClInclude Include="FaceDetection.h" />
     <ClInclude Include="File.h" />
+    <ClInclude Include="LicensePlate.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="messages.h" />
     <ClInclude Include="ObjectDetection.h" />
@@ -163,6 +164,7 @@
     <ClCompile Include="Censor.cpp" />
     <ClCompile Include="FaceDetection.cpp" />
     <ClCompile Include="File.cpp" />
+    <ClCompile Include="LicensePlate.cpp" />
     <ClCompile Include="menu.cpp" />
     <ClCompile Include="ObjectDetection.cpp" />
     <ClCompile Include="Source.cpp" />
