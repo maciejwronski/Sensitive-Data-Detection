@@ -21,13 +21,31 @@ cv::Mat Censor::SetGaussianBlur(const std::vector<cv::Rect>& objbuffer, const cv
 	cv::Mat mat = imgMatrix;
 	for (std::vector<cv::Rect>::const_iterator r = objbuffer.begin(); r != objbuffer.end(); r++){
 		mat = imgMatrix(*r);
+		
+		cv::Size gaussSize;
+		if ((*r).width % 2 == 0 && (*r).height % 2 == 0) {
+			gaussSize.width = (*r).width - 1;
+			gaussSize.height = (*r).height - 1;
+		}
+		else if ((*r).width % 2 == 0) {
+			gaussSize.width = (*r).width - 1;
+			gaussSize.height = (*r).height;
+		}
+		else if ((*r).height % 2 == 0) {
+			gaussSize.width = (*r).width;
+			gaussSize.height = (*r).height-1;
+		}
+		else  {
+			gaussSize.width = (*r).width;
+			gaussSize.height = (*r).height;
+		}
 		try {
-			cv::GaussianBlur(mat, mat, cv::Size((*r).width, (*r).height), 1000);
+			cv::GaussianBlur(mat, mat, gaussSize, 100);
 		}
 		catch(cv::Exception e){
-
+			std::cout << "Error: " << e.what() << std::endl;
 		}
 
 	}
-	return imgMatrix;
+	return mat;
 }

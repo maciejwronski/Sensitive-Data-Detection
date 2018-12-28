@@ -195,7 +195,7 @@ void FaceDetection::FindTwoClosestRectangles(std::vector<cv::Rect>& vec) {
 				currMinDistance = tempDist;
 				indexes[0] = i;
 				indexes[1] = j;
-				std::cout << indexes[0] << " " << indexes[1] << std::endl;
+				//std::cout << indexes[0] << " " << indexes[1] << std::endl;
 			}
 		}
 	}
@@ -219,7 +219,6 @@ void FaceDetection::ShowObjects(int  censorType)
 {
 	if (!LoadImage(matFile, _filePath) || !LoadCascade(_cascade, _cascadeName))
 		return;
-	std::cout << "HEEJ" << std::endl;
 	CreateWindow(_windowName);
 	cv::imshow("Original Image", matFile);
 	matFile = CropWhiteBorder(matFile);

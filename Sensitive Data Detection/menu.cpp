@@ -12,8 +12,6 @@ short Menu::GetMenu() const {
 std::string Menu::GetPathToFileFromUser()
 {
 	std::cout << Messages::DefinePath();
-	std::cin.clear();
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	std::string filePath;
 	while ((std::getline(std::cin, filePath) && !File::Exists(filePath))) { /* Until valid filepath or enter pressed*/
 		if (filePath == "") {

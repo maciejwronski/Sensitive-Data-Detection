@@ -120,7 +120,7 @@ cv::Mat ObjectDetection::RotateImage(cv::Mat &Image, float angle, const cv::Poin
 {
 	cv::Mat src = Image;
 	
-	//cv::Point2f center((src.cols - 1) / 2.0, (src.rows - 1) / 2.0);
+
 	cv::Mat rot = cv::getRotationMatrix2D(point, angle, 1.0);
 	cv::Rect2f bbox = cv::RotatedRect(cv::Point2f(), src.size(), angle).boundingRect2f();
 	rot.at<double>(0, 2) += bbox.width / 2.0 - src.cols / 2.0;

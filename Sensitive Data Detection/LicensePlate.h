@@ -21,7 +21,7 @@ class LicensePlateDetection {
 public:
 	LicensePlateDetection(const std::string& filePath) : _filePath(filePath) {};
 	void ShowObjects(int  censorType);
-	void ShowFinalImage(cv::Mat & FinalImg, cv::Rect & finalRect);
+	void ShowFinalImage(cv::Mat & FinalImg, cv::Rect & finalRect, int censorType);
 	int TryToFindIndex(const std::vector<std::vector<cv::Point>>& possiblePlates, const std::vector<std::vector<cv::Point>>& possiblePlateByContours);
 	std::vector<std::vector<cv::Point>> DetectPossiblePlates(cv::Mat& img);
 	std::vector<std::vector<cv::Point>> ChildrenContours(const cv::Mat & img);

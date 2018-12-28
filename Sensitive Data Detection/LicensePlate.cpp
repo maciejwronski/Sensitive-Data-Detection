@@ -69,13 +69,28 @@ void LicensePlateDetection::ShowObjects(int censorType)
 	std::cout << "Possible num of plates by finding numbers inside of license plate" << possiblePlatesByParentContours.size() << std::endl;
 	int index = TryToFindIndex(possiblePlates, possiblePlatesByParentContours);
 	cv::Rect finalRect = cv::boundingRect(possiblePlates[index]);
-	ShowFinalImage(FinalMat, finalRect);
+	ShowFinalImage(FinalMat, finalRect, censorType);
 
 	cv::waitKey(0);
 }
 
-void LicensePlateDetection::ShowFinalImage(cv::Mat& FinalImg, cv::Rect& finalRect) {
-	cv::rectangle(FinalImg, cv::Point(finalRect.x, finalRect.y), cv::Point(finalRect.x + finalRect.width, finalRect.y + finalRect.height), cv::Scalar(0, 255, 0), 1);
+void LicensePlateDetection::ShowFinalImage(cv::Mat& FinalImg, cv::Rect& finalRect, int censorType) {
+	Censor censor((Censor::Types)censorType);
+	std::vector<cv::Rect> objbuffer1;
+	objbuffer1.push_back(finalRect);
+	switch (censor.currType) {
+	case censor.GaussianBlur:
+		censor.SetGaussianBlur(objbuffer1, FinalImg);
+		break;
+	case censor.Rect:
+		censor.SetRect(objbuffer1, FinalImg, cv::Scalar(255, 0, 0));
+		break;
+	case censor.FilledRect:
+		censor.SetFilledRect(objbuffer1, FinalImg, cv::Scalar(255, 0, 0));
+		break;
+
+	}
+	//cv::rectangle(FinalImg, cv::Point(finalRect.x, finalRect.y), cv::Point(finalRect.x + finalRect.width, finalRect.y + finalRect.height), cv::Scalar(0, 255, 0), 1);
 	cv::imshow("Final Image", FinalImg);
 }
 int LicensePlateDetection::TryToFindIndex(const std::vector<std::vector<cv::Point>>& possiblePlates, const std::vector<std::vector<cv::Point>>& possiblePlateByContours) {
@@ -197,11 +212,11 @@ double LicensePlateDetection::ReturnNumOfWhitePixels(cv::Mat& img, cv::Rect& rec
 }
 bool LicensePlateDetection::DoesRectangleContainPoint(cv::RotatedRect& rectangle, cv::Point2f& point) {
 
-	cv::Point2f corners[4];
-	rectangle.points(corners);
+	cv::Point2f cornersOfRect[4];
+	rectangle.points(cornersOfRect);
 
-	cv::Point2f* lastItemPointer = (corners + sizeof corners / sizeof corners[0]);
-	std::vector<cv::Point2f> contour(corners, lastItemPointer);
+	cv::Point2f* lastItemPointer = (cornersOfRect + sizeof cornersOfRect / sizeof cornersOfRect[0]);
+	std::vector<cv::Point2f> contour(cornersOfRect, lastItemPointer);
 
 	double indicator = cv::pointPolygonTest(contour, point, false);
 	bool rectangleContainsPoint = (indicator >= 0);

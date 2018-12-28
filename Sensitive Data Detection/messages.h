@@ -6,7 +6,7 @@ static class Messages {
 public:
 	static const std::string ApplicationExit() { return std::string("Application Exit\n"); };
 	static const std::string ApplyingNextCascade(const std::string& cascadeName) { return std::string("Applying " + cascadeName + " on main cascade \n "); }
-	static const std::string AskForTypeOfObject() { return std::string("Please enter type of object to detect. \n 0: Face \n 1: License Plate \n 2: Number of building\n "); }
+	static const std::string AskForTypeOfObject() { return std::string("Please enter type of object to detect. \n 0: Face \n 1: License Plate \n "); }
 	static const std::string AskForTypeOfCensor() { return std::string("Please enter type of censor to apply. \n 0: Gaussian Blur \n 1: Rect \n 2: Filled Rect\n "); }
 	static const std::string CouldntLoadCascade(const std::string& cascadeName) { return std::string("Couldn't load cascade " + cascadeName + " \n "); }
 	static const std::string CouldntLoadImage(const std::string& imageName) { return std::string("Couldn't load image" + imageName + " \n "); }
