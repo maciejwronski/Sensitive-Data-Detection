@@ -5,13 +5,16 @@
 #include "Censor.h"
 #include <vector>
 
+static int counter = 0;
+static bool debugging = true;
+
 class LicensePlateDetection {
 	cv::Mat matFile;
 	std::string _filePath;
 	std::string _windowName = "Detection Window";
 
-	const int MaxContourArea = 10000;
-	const int MinContourArea = 1;
+	const int MaxContourArea = 5000;
+	const int MinContourArea = 500;
 
 	bool LoadImage(cv::Mat& matFile, const std::string& filePath);
 	void CreateWindow(const std::string& windowName) const;

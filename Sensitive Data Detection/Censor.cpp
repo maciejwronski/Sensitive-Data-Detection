@@ -7,7 +7,7 @@ cv::Mat Censor::SetRect(const std::vector<cv::Rect>& objbuffer, const cv::Mat& i
 {
 	cv::Mat mat = imgMatrix;
 	for (std::vector<cv::Rect>::const_iterator r = objbuffer.begin(); r != objbuffer.end(); r++)
-		cv::rectangle(mat, cv::Rect(*r), scalar, 2, 2, 0);
+		cv::rectangle(mat, cv::Rect(*r), scalar, 2, 2);
 	return mat;
 }
 cv::Mat Censor::SetFilledRect(const std::vector<cv::Rect>& objbuffer, const cv::Mat& imgMatrix, const cv::Scalar& scalar) {

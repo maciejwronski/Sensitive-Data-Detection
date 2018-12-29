@@ -14,6 +14,7 @@ bool LicensePlateDetection::LoadImage(cv::Mat & matFile, const std::string & fil
 
 void LicensePlateDetection::CreateWindow(const std::string & windowName) const
 {
+	if (!debugging)
 	cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE*0.3);
 }
 
@@ -21,7 +22,8 @@ cv::Mat LicensePlateDetection::ReturnGrayImage(cv::Mat & Image)
 {
 	cv::Mat grayImg;
 	cv::cvtColor(Image, grayImg, cv::COLOR_BGR2GRAY);
-	cv::imshow("Gray Image", grayImg);
+	if(!debugging)
+		cv::imshow("Gray Image", grayImg);
 	return grayImg;
 }
 
@@ -51,7 +53,8 @@ float LicensePlateDetection::PercentageOfWhitePixels(cv::Mat& img, cv::RotatedRe
 				}
 			}
 		}
-		std::cout << cnt / area << std::endl;
+		if(!debugging)
+			std::cout << cnt / area << std::endl;
 		return cnt / area;
 }
 
@@ -62,16 +65,33 @@ void LicensePlateDetection::ShowObjects(int censorType)
 	CreateWindow(_windowName);
 	cv::Mat FinalMat;
 	matFile.copyTo(FinalMat);
-	cv::imshow("Original Image", matFile);
+	if (!debugging)
+		cv::imshow("Original Image", matFile);
 	std::vector<std::vector<cv::Point>> possiblePlates = DetectPossiblePlates(matFile);
 	std::vector<std::vector<cv::Point>> possiblePlatesByParentContours = ChildrenContours(FinalMat);
 	std::cout << "Possible num of plates after first part: " <<  possiblePlates.size() << std::endl;
 	std::cout << "Possible num of plates by finding numbers inside of license plate" << possiblePlatesByParentContours.size() << std::endl;
-	int index = TryToFindIndex(possiblePlates, possiblePlatesByParentContours);
-	cv::Rect finalRect = cv::boundingRect(possiblePlates[index]);
+	int index;
+	cv::Rect finalRect;
+	if (possiblePlates.empty() && possiblePlatesByParentContours.empty())
+		return;
+	else if (possiblePlates.empty()) {
+		index = 0;
+		finalRect = cv::boundingRect(possiblePlatesByParentContours[index]);
+	}
+	else if (possiblePlatesByParentContours.empty()) {
+		index = 0;
+		finalRect = cv::boundingRect(possiblePlates[index]);
+	}
+	else {
+		index = TryToFindIndex(possiblePlates, possiblePlatesByParentContours);
+		finalRect = cv::boundingRect(possiblePlates[index]);
+	}
+
+	//std::cout << "THIS: " << cv::contourArea(possiblePlates[index]) << std::endl;
 	ShowFinalImage(FinalMat, finalRect, censorType);
 
-	cv::waitKey(0);
+	//cv::waitKey(0);
 }
 
 void LicensePlateDetection::ShowFinalImage(cv::Mat& FinalImg, cv::Rect& finalRect, int censorType) {
@@ -83,15 +103,20 @@ void LicensePlateDetection::ShowFinalImage(cv::Mat& FinalImg, cv::Rect& finalRec
 		censor.SetGaussianBlur(objbuffer1, FinalImg);
 		break;
 	case censor.Rect:
-		censor.SetRect(objbuffer1, FinalImg, cv::Scalar(255, 0, 0));
+		censor.SetRect(objbuffer1, FinalImg, cv::Scalar(0, 0, 255));
 		break;
 	case censor.FilledRect:
-		censor.SetFilledRect(objbuffer1, FinalImg, cv::Scalar(255, 0, 0));
+		censor.SetFilledRect(objbuffer1, FinalImg, cv::Scalar(0, 0, 255));
 		break;
 
 	}
 	//cv::rectangle(FinalImg, cv::Point(finalRect.x, finalRect.y), cv::Point(finalRect.x + finalRect.width, finalRect.y + finalRect.height), cv::Scalar(0, 255, 0), 1);
-	cv::imshow("Final Image", FinalImg);
+	if (!debugging)
+		cv::imshow("Final Image", FinalImg);
+	std::string name{ std::to_string(counter) + ".jpg" };
+	std::string all = "C:\\Users\\Maciej\\Documents\\Visual Studio 2017\\Projects\\Sensitive Data Detection\\Sensitive Data Detection\\Sensitive Data Detection\\cars_test_images\\result_eu\\" + name;
+	cv::imwrite(all, FinalImg);
+	counter++;
 }
 int LicensePlateDetection::TryToFindIndex(const std::vector<std::vector<cv::Point>>& possiblePlates, const std::vector<std::vector<cv::Point>>& possiblePlateByContours) {
 	int index = 0;
@@ -124,15 +149,15 @@ std::vector<std::vector<cv::Point>> LicensePlateDetection::DetectPossiblePlates(
 				cv::drawContours(temp, count, i, cv::Scalar(0, 255, 0), 2);
 				cv::drawContours(mask, count, i, 255, -1);
 		}
-		cv::imshow("Image with drawn contours", temp);
-		cv::imshow("Image with applied mask", mask);
+		//cv::imshow("Image with drawn contours", temp);
+		//cv::imshow("Image with applied mask", mask);
 
 		std::vector<cv::RotatedRect> minRect(count.size());
 		for (size_t i = 0; i < count.size(); i++){
 			minRect[i] = cv::minAreaRect(cv::Mat(count[i]));
-			if ( cv::contourArea(count[i]) < MaxContourArea) {
+			if (MinContourArea < cv::contourArea(count[i]) && cv::contourArea(count[i]) < MaxContourArea) {
 				cv::Rect rect = cv::boundingRect(count[i]);
-				if (ReturnNumOfWhitePixels(mask, rect, minRect[i]) < 0.4f || !HasMoreOrFourContours(count, i) || rect.width > rect.height*6 ||
+				if (ReturnNumOfWhitePixels(mask, rect, minRect[i]) < 0.4f || !HasMoreOrFourContours(count, i) || rect.width > rect.height*6 || rect.height*2 > rect.width || rect.height > rect.width ||
 					PercentageOfWhitePixels(mask, minRect[i], rect) < 0.80f)
 					continue;
 				cv::rectangle(mask, cv::Point(rect.x, rect.y), cv::Point(rect.x + rect.width, rect.y + rect.height), cv::Scalar(0, 255, 0), 1);
@@ -144,7 +169,7 @@ std::vector<std::vector<cv::Point>> LicensePlateDetection::DetectPossiblePlates(
 				possiblePlates.push_back(count[i]);
 			}
 		}
-		cv::imshow("Image with applied mask and possible plates", mask);
+		//cv::imshow("Image with applied mask and possible plates", mask);
 		return possiblePlates;
 }
 
@@ -164,13 +189,13 @@ std::vector<std::vector<cv::Point>> LicensePlateDetection::ChildrenContours(cons
 			counts[hierarchy[i][3]]++;
 		}
 	}
-
-	int counter = 0;
 	for (auto const& x : counts)
 	{
-		if (x.second > 3) {
+		cv::Rect rect = cv::boundingRect(contours[x.first]);
+		if (x.second > 3 && rect.width > rect.height) {
 			contoursOutput.push_back(contours[x.first]);
 		}
+		
 	}
 
 	return contoursOutput;
