@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "FaceDetection.h"
 
+
 // TODO: Image rotated by 180* on detail-based, Apply opposite rotation / what if face is rotated by 90+ / 269- degrees on detail-based 
 cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& matFile, std::vector<cv::Rect>& objbuffer1, std::vector<cv::Rect>& objbuffer2, std::vector<cv::Rect>& objbuffer3, const int& minWidth, const int& minHeight, const int& maxWidth, const int& maxHeight) {
 	if (MethodToFindRotation == ByRotatingImage) {
@@ -51,6 +52,9 @@ cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& ma
 					}
 					return tempImage2;
 				}
+				else {
+					return matFile;
+				}
 			}
 		}
 		objbuffer1.insert(std::end(objbuffer1), std::begin(objbuffer2), std::end(objbuffer2));
@@ -82,9 +86,9 @@ cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& ma
 					FindTwoClosestRectangles(objbuffer3);
 				}
 				cv::Mat tempImage2 = tempImage;
-				Censor censor(Censor::FilledRect);
-				censor.SetFilledRect(objbuffer3, tempImage2, cv::Scalar(255, 0, 0));
-				cv::imshow("Detected Eyes", tempImage2);
+				//Censor censor(Censor::FilledRect);
+				//censor.SetFilledRect(objbuffer3, tempImage2, cv::Scalar(255, 0, 0));
+//			cv::imshow("Detected Eyes", tempImage2);
 				std::cout << Messages::FoundByCascade(_eyeCascadeName);
 
 
@@ -133,6 +137,8 @@ cv::Mat FaceDetection::DetectObjects(cv::CascadeClassifier& cascade, cv::Mat& ma
 				std::cout << "Applying Rotation method " << std::endl;
 				MethodToFindRotation = ByRotatingImage;
 				matFile = DetectObjects(_cascade, matFile, objbuffer1, objbuffer2, objbuffer3, minWidth, minHeight, maxWidth, maxHeight);
+				MethodToFindRotation = ByFindingDetail;
+				return matFile;
 			}
 		}
 }
@@ -220,7 +226,7 @@ void FaceDetection::ShowObjects(int  censorType)
 	if (!LoadImage(matFile, _filePath) || !LoadCascade(_cascade, _cascadeName))
 		return;
 	CreateWindow(_windowName);
-	cv::imshow("Original Image", matFile);
+//	cv::imshow("Original Image", matFile);
 	matFile = CropWhiteBorder(matFile);
 
 	CropWhiteBorder(matFile);
@@ -245,7 +251,14 @@ void FaceDetection::ShowObjects(int  censorType)
 
 	}
 	matFile = CropWhiteBorder(matFile);
+#if !FOLDERS
 	cv::imshow(_windowName, matFile);
 	cv::waitKey(0);
-	cv::destroyAllWindows();
+#else
+	std::string name{ std::to_string(counter) + ".jpg" };
+	std::string all = ResultPath + name;
+	cv::imwrite(all, matFile);
+	counter++;
+#endif
+	//cv::destroyAllWindows();
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ObjectDetection.h"
-
 class FaceDetection : public ObjectDetection  {
 	std::string _mainCascade = "C:\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml";
 	std::string _eyeCascadeName = "C:\\opencv\\sources\\data\\haarcascades\\haarcascade_eye.xml";

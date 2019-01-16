@@ -5,8 +5,13 @@
 #include "Censor.h"
 #include <vector>
 
+#define FOLDERS 1
+#if FOLDERS
 static int counter = 0;
-static bool debugging = true;
+#endif
+#if FOLDERS
+const std::string ResultPath{ "C:\\Users\\Maciej\\Documents\\Visual Studio 2017\\Projects\\Sensitive Data Detection\\Sensitive Data Detection\\Sensitive Data Detection\\cars_test_images\\result_eu\\" };
+#endif
 
 class LicensePlateDetection {
 	cv::Mat matFile;

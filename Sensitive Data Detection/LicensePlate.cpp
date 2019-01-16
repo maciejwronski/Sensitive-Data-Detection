@@ -14,7 +14,6 @@ bool LicensePlateDetection::LoadImage(cv::Mat & matFile, const std::string & fil
 
 void LicensePlateDetection::CreateWindow(const std::string & windowName) const
 {
-	if (!debugging)
 	cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE*0.3);
 }
 
@@ -22,7 +21,6 @@ cv::Mat LicensePlateDetection::ReturnGrayImage(cv::Mat & Image)
 {
 	cv::Mat grayImg;
 	cv::cvtColor(Image, grayImg, cv::COLOR_BGR2GRAY);
-	if(!debugging)
 		cv::imshow("Gray Image", grayImg);
 	return grayImg;
 }
@@ -53,8 +51,7 @@ float LicensePlateDetection::PercentageOfWhitePixels(cv::Mat& img, cv::RotatedRe
 				}
 			}
 		}
-		if(!debugging)
-			std::cout << cnt / area << std::endl;
+		std::cout << cnt / area << std::endl;
 		return cnt / area;
 }
 
@@ -65,8 +62,7 @@ void LicensePlateDetection::ShowObjects(int censorType)
 	CreateWindow(_windowName);
 	cv::Mat FinalMat;
 	matFile.copyTo(FinalMat);
-	if (!debugging)
-		cv::imshow("Original Image", matFile);
+	cv::imshow("Original Image", matFile);
 	std::vector<std::vector<cv::Point>> possiblePlates = DetectPossiblePlates(matFile);
 	std::vector<std::vector<cv::Point>> possiblePlatesByParentContours = ChildrenContours(FinalMat);
 	std::cout << "Possible num of plates after first part: " <<  possiblePlates.size() << std::endl;
@@ -110,13 +106,16 @@ void LicensePlateDetection::ShowFinalImage(cv::Mat& FinalImg, cv::Rect& finalRec
 		break;
 
 	}
-	//cv::rectangle(FinalImg, cv::Point(finalRect.x, finalRect.y), cv::Point(finalRect.x + finalRect.width, finalRect.y + finalRect.height), cv::Scalar(0, 255, 0), 1);
-	if (!debugging)
-		cv::imshow("Final Image", FinalImg);
+#if !FOLDERS
+    cv::rectangle(FinalImg, cv::Point(finalRect.x, finalRect.y), cv::Point(finalRect.x + finalRect.width, finalRect.y + finalRect.height), cv::Scalar(0, 255, 0), 1);
+	cv::imshow("Final Image", FinalImg);
+	cv::waitKey(0);
+#else
 	std::string name{ std::to_string(counter) + ".jpg" };
-	std::string all = "C:\\Users\\Maciej\\Documents\\Visual Studio 2017\\Projects\\Sensitive Data Detection\\Sensitive Data Detection\\Sensitive Data Detection\\cars_test_images\\result_eu\\" + name;
+	std::string all = ResultPath + name;
 	cv::imwrite(all, FinalImg);
 	counter++;
+#endif
 }
 int LicensePlateDetection::TryToFindIndex(const std::vector<std::vector<cv::Point>>& possiblePlates, const std::vector<std::vector<cv::Point>>& possiblePlateByContours) {
 	int index = 0;

@@ -153,9 +153,8 @@ void ObjectDetection::ShowObjects(int  censorType)
 {
 	if (!LoadImage(matFile, _filePath) || !LoadCascade(_cascade, _cascadeName))
 		return;
-	std::cout << "dupa" << std::endl;
 	CreateWindow(_windowName);
-	cv::imshow("Original Image", matFile);
+	//cv::imshow("Original Image", matFile);
 	matFile = CropWhiteBorder(matFile);
 
 	CropWhiteBorder(matFile);
@@ -180,7 +179,7 @@ void ObjectDetection::ShowObjects(int  censorType)
 
 	}
 	matFile = CropWhiteBorder(matFile);
-	cv::imshow(_windowName, matFile);
+	//cv::imshow(_windowName, matFile);
 	cv::waitKey(0);
 	cv::destroyAllWindows();
 }

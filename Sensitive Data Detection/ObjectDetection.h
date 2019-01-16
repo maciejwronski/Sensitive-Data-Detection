@@ -7,8 +7,15 @@
 #include "menu.h"
 #include "Censor.h"
 
+#define FOLDERS 0
+
+#if FOLDERS
+static int counter = 0;
+const std::string ResultPath{ "C:\\Users\\Maciej\\Documents\\Visual Studio 2017\\Projects\\Sensitive Data Detection\\Sensitive Data Detection\\Sensitive Data Detection\\face_test_images\\result\\" };
+#endif
 
 class ObjectDetection {
+
 protected:
 
 	enum FindRotationOfGivenImage {
